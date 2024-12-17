@@ -7,21 +7,20 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
 import com.javaweb.model.BuildingDTO;
 import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
+import com.javaweb.utils.ConnectionJDBCUtil;
 import com.javaweb.utils.NumberUtil;
 import com.javaweb.utils.StringUtil;
 
 @Repository
 public class BuildingRepositoryImpl implements BuildingRepository {
 
-	static final String DB_URL = "jdbc:mysql://localhost:3306/estateadvance";
-	static final String USER = "root";
-	static final String PASS = "123456";
 	
 	public static void joinTable(Map<String, Object> params, List<String> typeCode, StringBuilder join) {
 	    String staffId = (String)params.get("staffId");
@@ -34,12 +33,6 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 	    	join.append(" INNER JOIN renttype ON b.id = buildingrenttype.renttypeid ");
 	    }
 
-	    String rentAreaFrom = (String)params.get("rentAreaFrom");
-	    String rentAreaTo = (String)params.get("rentAreaTo");
-	    
-	    if (StringUtil.checkString(rentAreaFrom) == true || StringUtil.checkString(rentAreaTo) == true) {
-	    	join.append(" INNER JOIN rentarea ON rentarea.buildingid = b.id ");
-	    }
 	}
 
 	
@@ -48,7 +41,7 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 			if(!it.getKey().equals("staffId") && !it.getKey().equals("typeCode") 
 					&& !it.getKey().startsWith("area") && !it.getKey().startsWith("rentPrice")) {
 				String value = it.getValue().toString();
-				if(StringUtil.checkString(value)) {
+				if(StringUtil.checkString(value) && !it.getKey().equals("rentAreaFrom") && !it.getKey().equals("rentAreaTo")) {
 					if(NumberUtil.isNumber(value) && !it.getKey().equals("managerPhone")) {
 						where.append(" AND b."+ it.getKey().toLowerCase() + " = "+ value); 
 					} else {
@@ -69,12 +62,14 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 		String rentAreaTo = (String)params.get("rentAreaTo");
 		    
 		if (StringUtil.checkString(rentAreaFrom) == true || StringUtil.checkString(rentAreaTo) == true) {
+			where.append(" AND EXISTS (SELECT * FROM rentarea r WHERE b.id = r.buildingid");
 			if (StringUtil.checkString(rentAreaFrom)) {
-				where.append(" AND rentarea.value >= " + rentAreaFrom);
+				where.append(" AND r.value >= " + rentAreaFrom);
 			}
 			if (StringUtil.checkString(rentAreaTo)) {
-				where.append(" AND rentarea.value <= " + rentAreaFrom);
+				where.append(" AND r.value <= " + rentAreaFrom);
 			}
+			where.append(") ");
 		}
 		
 		String rentPriceFrom = (String)params.get("rentPriceFrom");
@@ -89,26 +84,33 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 			}
 		}
 		
-		if (typeCode != null && typeCode.size() != 0) {
-			List<String> code = new ArrayList<>();
-			for (String item : typeCode) {
-				code.add("'" + item + "'");
-			}
-			where.append(" AND renttype.code IN(" + String.join(",", code) + ")");
-		}
+//		if (typeCode != null && typeCode.size() != 0) {
+//			List<String> code = new ArrayList<>();
+//			for (String item : typeCode) {
+//				code.add("'" + item + "'");
+//			}
+//			where.append(" AND renttype.code IN(" + String.join(",", code) + ")");
+//		}
 		
+		if (typeCode != null && typeCode.size() != 0) {
+			where.append(" AND(");
+			String sql = typeCode.stream().map(it -> "renttype.code LIKE" + "'%" + it + "%' ").collect(Collectors.joining(" OR "));
+			where.append(sql + ") ");
+		}
 	}
 	@Override
 	public List<BuildingEntity> findAll(Map<String, Object> params, List<String> typeCode) {
-		StringBuilder sql = new StringBuilder("SELECT * FROM building b ");
+		StringBuilder sql = new StringBuilder("SELECT b.id, b.name, b.street, b.ward, b.districtid, "
+				+ "b.numberofbasement, b.managername, b.managerphone, b.floorarea, b.rentprice, b.servicefee, b.brokeragefee FROM building b ");
 		joinTable(params, typeCode, sql);
 		StringBuilder where = new StringBuilder(" WHERE 1=1");
 		queryNormal(params, typeCode, where);
 		querySpecial(params, typeCode, where);
-//		where.append(" GROUP BY b.id");
+		where.append(" GROUP BY b.id");
 		sql.append(where);
+		System.out.println(sql);
 		List<BuildingEntity> result = new ArrayList<>();
-		try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+		try(Connection conn = ConnectionJDBCUtil.getConnection();
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery(sql.toString());
 			) {
@@ -119,7 +121,7 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 				buildingEntity.setNameBuilding(rs.getString("name"));
 				buildingEntity.setStreet(rs.getString("street"));
 				buildingEntity.setWard(rs.getString("ward"));
-				buildingEntity.setDistrictId(Long.parseLong(params.get("districtId").toString()));
+				buildingEntity.setDistrictId(rs.getLong("districtid"));
 				buildingEntity.setNumberOfBasement(rs.getLong("numberofbasement"));
 				buildingEntity.setManagerName(rs.getString("managername"));
 				buildingEntity.setManagerPhone(rs.getString("managerphone"));
