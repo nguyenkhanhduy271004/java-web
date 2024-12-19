@@ -1,6 +1,7 @@
 package com.javaweb.model;
 
 public class BuildingDTO {
+	
 	private String nameBuilding;
 	private String address;	
 	private Long numberOfBasement;

@@ -9,17 +9,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Repository;
 
 import com.javaweb.builder.BuildingSearchBuilder;
+import com.javaweb.model.BuildingRequestDTO;
 import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 
 @Repository
 @PropertySource("classpath:application.properties")
 public class JDBCBuildingRepositoryImpl implements BuildingRepository {
+	
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@Value("${spring.datasource.url}")
 	private static String DB_URL;
@@ -126,36 +134,26 @@ public class JDBCBuildingRepositoryImpl implements BuildingRepository {
 		querySpecial(buildingSearchBuilder, where);
 		where.append(" GROUP BY b.id");
 		sql.append(where);
-		System.out.println(sql);
-		List<BuildingEntity> result = new ArrayList<>();
-		try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-				Statement stmt = conn.createStatement();
-				ResultSet rs = stmt.executeQuery(sql.toString());) {
+		Query query =  entityManager.createQuery(sql.toString());
+		return query.getResultList();
+	}
 
-			while (rs.next()) {
-				BuildingEntity buildingEntity = new BuildingEntity();
-				buildingEntity.setId(rs.getLong("id"));
-				buildingEntity.setNameBuilding(rs.getString("name"));
-				buildingEntity.setStreet(rs.getString("street"));
-				buildingEntity.setWard(rs.getString("ward"));
-//				buildingEntity.setDistrictId(rs.getLong("districtid"));
-				buildingEntity.setNumberOfBasement(rs.getLong("numberofbasement"));
-				buildingEntity.setManagerName(rs.getString("managername"));
-				buildingEntity.setManagerPhone(rs.getString("managerphone"));
-				buildingEntity.setFloorArea(rs.getLong("floorarea"));
-				buildingEntity.setEmptySpace((long) 0);
-				buildingEntity.setRentPrice(rs.getLong("rentprice"));
-				buildingEntity.setServiceFee(rs.getLong("servicefee"));
-				buildingEntity.setBrokerageFee(rs.getLong("brokeragefee"));
-				result.add(buildingEntity);
-			}
+	@Override
+	public void create(BuildingRequestDTO buildingRequestDTO) {
+		// TODO Auto-generated method stub
+		
+	}
 
-			System.out.println("Connected database successfully...");
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("Connected database failed...");
-		}
-		return result;
+	@Override
+	public void update(BuildingRequestDTO buildingRequestDTO) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void delete(Long id) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
