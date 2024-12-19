@@ -12,15 +12,16 @@ import com.javaweb.converter.BuildingDTOConverter;
 import com.javaweb.converter.BuildingSearchBuilderConverter;
 import com.javaweb.model.BuildingDTO;
 import com.javaweb.model.BuildingRequestDTO;
+import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
-import com.javaweb.repository.impl.BuildingRepositoryImpl;
+import com.javaweb.repository.entity.DistrictEntity;
 import com.javaweb.service.BuildingService;
 
 @Service
-public class BuildingServiceImpl implements BuildingService{
-	
+public class BuildingServiceImpl implements BuildingService {
+
 	@Autowired
-	private BuildingRepositoryImpl buildingRepository;
+	private BuildingRepository buildingRepository;
 	@Autowired
 	private BuildingDTOConverter buildingDTOConverter;
 	@Autowired
@@ -28,10 +29,11 @@ public class BuildingServiceImpl implements BuildingService{
 
 	@Override
 	public List<BuildingDTO> findAll(Map<String, Object> params, List<String> typeCode) {
-		BuildingSearchBuilder buildingSearchBuilder = buildingSearchBuilderConverter.toBuildingSearchBuilder(params, typeCode);
+		BuildingSearchBuilder buildingSearchBuilder = buildingSearchBuilderConverter.toBuildingSearchBuilder(params,
+				typeCode);
 		List<BuildingEntity> buildingEntities = buildingRepository.findAll(buildingSearchBuilder);
 		List<BuildingDTO> result = new ArrayList<BuildingDTO>();
-		for (BuildingEntity item:buildingEntities) {
+		for (BuildingEntity item : buildingEntities) {
 			BuildingDTO buildingDTO = buildingDTOConverter.toBuildingDTO(item);
 			result.add(buildingDTO);
 		}
@@ -40,19 +42,33 @@ public class BuildingServiceImpl implements BuildingService{
 
 	@Override
 	public void create(BuildingRequestDTO buildingRequestDTO) {
-		buildingRepository.create(buildingRequestDTO);
+		BuildingEntity buildingEntity = new BuildingEntity();
+		buildingEntity.setNameBuilding(buildingRequestDTO.getName());
+		buildingEntity.setWard(buildingRequestDTO.getWard());
+		buildingEntity.setStreet(buildingRequestDTO.getStreet());
+		DistrictEntity districtEntity = new DistrictEntity();
+		districtEntity.setId(buildingRequestDTO.getDistrictId());
+		buildingEntity.setDistrict(districtEntity);
+		buildingEntity.setRentPrice(buildingRequestDTO.getRentPrice());
+		buildingRepository.save(buildingEntity);
 	}
 
 	@Override
 	public void update(BuildingRequestDTO buildingRequestDTO) {
-		buildingRepository.update(buildingRequestDTO);	
+		BuildingEntity buildingEntity = buildingRepository.findById(buildingRequestDTO.getId()).get();
+		buildingEntity.setNameBuilding(buildingRequestDTO.getName());
+		buildingEntity.setWard(buildingRequestDTO.getWard());
+		buildingEntity.setStreet(buildingRequestDTO.getStreet());
+		DistrictEntity districtEntity = new DistrictEntity();
+		districtEntity.setId(buildingRequestDTO.getDistrictId());
+		buildingEntity.setDistrict(districtEntity);
+		buildingEntity.setRentPrice(buildingRequestDTO.getRentPrice());
+		buildingRepository.save(buildingEntity);
 	}
 
 	@Override
 	public void delete(Long id) {
-		buildingRepository.delete(id);
+		buildingRepository.deleteById(id);
 	}
 
-
-	
 }
