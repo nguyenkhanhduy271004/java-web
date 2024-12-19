@@ -11,15 +11,15 @@ import com.javaweb.builder.BuildingSearchBuilder;
 import com.javaweb.converter.BuildingDTOConverter;
 import com.javaweb.converter.BuildingSearchBuilderConverter;
 import com.javaweb.model.BuildingDTO;
-import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
+import com.javaweb.repository.impl.BuildingRepositoryImpl;
 import com.javaweb.service.BuildingService;
 
 @Service
 public class BuildingServiceImpl implements BuildingService{
 	
 	@Autowired
-	private BuildingRepository buildingRepository;
+	private BuildingRepositoryImpl buildingRepository;
 	@Autowired
 	private BuildingDTOConverter buildingDTOConverter;
 	@Autowired
