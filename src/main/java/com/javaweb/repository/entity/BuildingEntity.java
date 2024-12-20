@@ -30,7 +30,7 @@ public class BuildingEntity {
 	@Column(name = "ward")
 	private String ward;
 
-	private Long emptySpace;
+//	private Long emptySpace;
 
 	@Column(name = "numberofbasement")
 	private Long numberOfBasement;
@@ -47,7 +47,7 @@ public class BuildingEntity {
 	@Column(name = "rentprice")
 	private Long rentPrice;
 
-	@Column(name = "rentdescription")
+	@Column(name = "rentpricedescription")
 	private String rentDescription;
 
 	@Column(name = "managername")
@@ -115,14 +115,6 @@ public class BuildingEntity {
 
 	public void setWard(String ward) {
 		this.ward = ward;
-	}
-
-	public Long emptySpace() {
-		return emptySpace;
-	}
-
-	public void setEmptySpace(Long emptySpace) {
-		this.emptySpace = emptySpace;
 	}
 
 	public Long getNumberOfBasement() {
@@ -203,10 +195,6 @@ public class BuildingEntity {
 
 	public void setBrokerageFee(Long brokerageFee) {
 		this.brokerageFee = brokerageFee;
-	}
-
-	public Long getEmptySpace() {
-		return emptySpace;
 	}
 
 }
